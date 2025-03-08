@@ -3,11 +3,12 @@ Test Factory to make fake objects for testing
 """
 
 import factory
+from factory.fuzzy import FuzzyText
 from service.models import Customer
 
 
 class CustomerFactory(factory.Factory):
-    """Creates fake pets that you don't have to feed"""
+    """Creates fake customers"""
 
     class Meta:  # pylint: disable=too-few-public-methods
         """Maps factory to data model"""
@@ -19,6 +20,6 @@ class CustomerFactory(factory.Factory):
     last_name = factory.Faker("last_name")
     address = factory.Faker("address")
     email = factory.Faker("email")
-    password = factory.Faker("password")
+    password = FuzzyText(length=12)
 
     # Todo: Add your other attributes here...

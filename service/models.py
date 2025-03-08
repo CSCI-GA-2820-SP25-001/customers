@@ -6,6 +6,7 @@ All of the models are stored in this module
 
 import logging
 from flask_sqlalchemy import SQLAlchemy
+import re
 
 logger = logging.getLogger("flask.app")
 
@@ -37,7 +38,7 @@ class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(63))
     last_name = db.Column(db.String(63))
-    email = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(63))
     address = db.Column(db.String(255))
 
@@ -54,17 +55,31 @@ class Customer(db.Model):
 
     def create(self):
         """
-        Creates a Customer to the database
+        Creates a Customer in the database
+        Raises DataValidationError if email already exists or has invalid format
         """
-        logger.info("Creating %s", self.first_name)
-        self.id = None  # pylint: disable=invalid-name
+        logger.info("Creating customer %s %s", self.first_name, self.last_name)
+        self.id = None  # ensure db generates the ID
+
+        # Validate email format explicitly
+        if not self._validate_email_format(self.email):
+            raise DataValidationError(f"Invalid email format: '{self.email}'")
+
+        existing_customer = Customer.query.filter_by(email=self.email).first()
+        if existing_customer:
+            raise DataValidationError(
+                f"Customer with email '{self.email}' already exists."
+            )
+
         try:
             db.session.add(self)
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            logger.error("Error creating record: %s", self)
-            raise DataValidationError(e) from e
+            logger.error("Error creating customer: %s", e)
+            raise DataValidationError(
+                "Could not create customer due to a database error."
+            ) from e
 
     def update(self):
         """
@@ -102,17 +117,21 @@ class Customer(db.Model):
 
     def deserialize(self, data):
         """
-        Deserializes a Customer from a dictionary
+        Deserializes a Customer from a dictionary and validates email format
 
         Args:
-            data (dict): A dictionary containing the resource data
+            data (dict): A dictionary containing the customer data
         """
         try:
             self.first_name = data["first_name"]
             self.last_name = data["last_name"]
             self.email = data["email"]
-            self.address = data["address"]
             self.password = data["password"]
+            self.address = data["address"]
+
+            if not self._validate_email_format(self.email):
+                raise DataValidationError(f"Invalid email format: '{self.email}'")
+
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
         except KeyError as error:
@@ -120,11 +139,8 @@ class Customer(db.Model):
                 "Invalid Customer: missing " + error.args[0]
             ) from error
         except TypeError as error:
-            raise DataValidationError(
-                "Invalid Customer: body of request contained bad or no data "
-                + str(error)
-            ) from error
-        return self
+            raise DataValidationError("Invalid input data") from error
+            return self
 
     ##################################################
     # CLASS METHODS
@@ -151,3 +167,9 @@ class Customer(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.name == name)
+
+    @staticmethod
+    def _validate_email_format(email):
+        """Validates email format using regex."""
+        email_regex = r"(^[\w\.\+-]+@[\w-]+\.[a-zA-Z]{2,}$)"
+        return re.match(email_regex, email) is not None
