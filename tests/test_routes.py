@@ -25,17 +25,19 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Customer
+from .factories import CustomerFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/customers"
 
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceService(TestCase):
+class TestCustomerService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -63,6 +65,25 @@ class TestYourResourceService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    ############################################################
+    # Utility function to bulk create customers
+    ############################################################
+    def _create_customers(self, count: int = 1) -> list:
+        """Factory method to create customers in bulk"""
+        customers = []
+        for _ in range(count):
+            test_customer = CustomerFactory()
+            response = self.client.post(BASE_URL, json=test_customer.serialize())
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_201_CREATED,
+                "Could not create test customer",
+            )
+            new_customer = response.get_json()
+            test_customer.id = new_customer["id"]
+            customers.append(test_customer)
+        return customers
+
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
@@ -72,4 +93,55 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+    # ----------------------------------------------------------
+    # TEST CREATE
+    # ----------------------------------------------------------
+    def test_create_customer(self):
+        """It should Create a new Customer"""
+        test_customer = CustomerFactory()
+        logging.debug("Test Customer: %s", test_customer.serialize())
+        response = self.client.post(BASE_URL, json=test_customer.serialize())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = response.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_customer = response.get_json()
+        self.assertEqual(new_customer["first_name"], test_customer.first_name)
+        self.assertEqual(new_customer["last_name"], test_customer.last_name)
+        self.assertEqual(new_customer["email"], test_customer.email)
+        self.assertEqual(new_customer["password"], test_customer.password)
+        self.assertEqual(new_customer["address"], test_customer.address)
+
+        # Check that the location header was correct
+        response = self.client.get(location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_customer = response.get_json()
+        self.assertEqual(new_customer["first_name"], test_customer.first_name)
+        self.assertEqual(new_customer["last_name"], test_customer.last_name)
+        self.assertEqual(new_customer["email"], test_customer.email)
+        self.assertEqual(new_customer["password"], test_customer.password)
+        self.assertEqual(new_customer["address"], test_customer.address)
+
+    # ----------------------------------------------------------
+    # TEST READ
+    # ----------------------------------------------------------
+    def test_get_customer(self):
+        """It should Get a single Customer"""
+        # get the id of a customer
+        test_customer = self._create_customers(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["first_name"], test_customer.first_name)
+        self.assertEqual(data["last_name"], test_customer.last_name)
+
+    def test_get_customer_not_found(self):
+        """It should not Get a Customer thats not found"""
+        response = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])

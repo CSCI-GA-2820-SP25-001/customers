@@ -43,4 +43,86 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
+
+######################################################################
+# CREATE A NEW CUSTOMER
+######################################################################
+@app.route("/customers", methods=["POST"])
+def create_customers():
+    """
+    Create a Customer
+    This endpoint will create a Customer based the data in the body that is posted
+    """
+    app.logger.info("Request to Create a Customer...")
+    check_content_type("application/json")
+
+    customer = Customer()
+    # Get the data from the request and deserialize it
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    customer.deserialize(data)
+
+    # Save the new Customer to the database
+    customer.create()
+    app.logger.info("Customer with new id [%s] saved!", customer.id)
+
+    # Return the location of the new Customer
+    location_url = url_for("get_customers", customer_id=customer.id, _external=True)
+    return (
+        jsonify(customer.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
+
+
+######################################################################
+# READ A CUSTOMER
+######################################################################
+@app.route("/customers/<int:customer_id>", methods=["GET"])
+def get_customers(customer_id):
+    """
+    Retrieve a single Customer
+
+    This endpoint will return a Customer based on its id
+    """
+    app.logger.info("Request to Retrieve a customer with id [%s]", customer_id)
+
+    # Attempt to find the Customer and abort if not found
+    customer = Customer.find(customer_id)
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    app.logger.info(
+        "Returning customer: %s + %s", customer.first_name, customer.last_name
+    )
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+# ---------------------------------------------------------------------
+# Checks the ContentType of a request
+# ---------------------------------------------------------------------
+def check_content_type(content_type) -> None:
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        f"Content-Type must be {content_type}",
+    )
