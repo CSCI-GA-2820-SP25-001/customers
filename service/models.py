@@ -48,8 +48,6 @@ class Customer(db.Model):
         db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False
     )
 
-    # Todo: Place the rest of your schema here...
-
     def __repr__(self):
         return f"<Customer {self.name} id=[{self.id}]>"
 

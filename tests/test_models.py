@@ -21,6 +21,7 @@ Test cases for Customer Model
 # pylint: disable=duplicate-code
 import os
 import logging
+import re
 from unittest import TestCase
 from wsgi import app
 from service.models import Customer, DataValidationError, db
@@ -62,14 +63,22 @@ class TestCustomer(TestCase):
         db.session.query(Customer).delete()
         db.session.commit()
 
-    def tearDown(self):
-        """Runs after each test"""
-        db.session.remove()
-        self.app_context.pop()
+    # this was from arjun's commit but duplicated the below tearDown - also the app_context caused an error:
+    # RuntimeError: Working outside of application context.
+    # def tearDown(self):
+    #     """Runs after each test"""
+    #     db.session.remove()
+    #     self.app_context.pop()
 
     def tearDown(self):
         """This runs after each test"""
         db.session.remove()
+
+    @staticmethod
+    def _validate_email_format(email):
+        """Validates email format using regex."""
+        email_regex = r"(^[\w\.\+-]+@[\w-]+\.[a-zA-Z]{2,}$)"
+        return re.match(email_regex, email) is not None
 
     ######################################################################
     #  T E S T   C A S E S
