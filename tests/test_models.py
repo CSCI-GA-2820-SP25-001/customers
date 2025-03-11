@@ -88,10 +88,15 @@ class TestCustomer(TestCase):
         """It should create a customer with a valid email"""
         customer = CustomerFactory()
         customer.create()
+        self.assertIsNotNone(customer.id)
 
         found_customer = Customer.find(customer.id)
         self.assertIsNotNone(found_customer)
         self.assertEqual(found_customer.email, customer.email)
+        self.assertEqual(found_customer.first_name, customer.first_name)
+        self.assertEqual(found_customer.last_name, customer.last_name)
+        self.assertEqual(found_customer.address, customer.address)
+        self.assertEqual(found_customer.password, customer.password)
 
     def test_create_customer_invalid_email_format(self):
         """It should raise DataValidationError for invalid email format"""

@@ -125,6 +125,7 @@ class TestCustomerService(TestCase):
         self.assertEqual(new_customer["password"], test_customer.password)
         self.assertEqual(new_customer["address"], test_customer.address)
 
+
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------

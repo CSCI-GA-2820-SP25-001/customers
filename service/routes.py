@@ -43,7 +43,6 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-
 ######################################################################
 # CREATE A NEW CUSTOMER
 ######################################################################
@@ -68,6 +67,7 @@ def create_customers():
 
     # Return the location of the new Customer
     location_url = url_for("get_customers", customer_id=customer.id, _external=True)
+    
     return (
         jsonify(customer.serialize()),
         status.HTTP_201_CREATED,
