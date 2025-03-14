@@ -43,6 +43,7 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
+
 ######################################################################
 # CREATE A NEW CUSTOMER
 ######################################################################
@@ -67,7 +68,7 @@ def create_customers():
 
     # Return the location of the new Customer
     location_url = url_for("get_customers", customer_id=customer.id, _external=True)
-    
+
     return (
         jsonify(customer.serialize()),
         status.HTTP_201_CREATED,
@@ -99,6 +100,47 @@ def get_customers(customer_id):
         "Returning customer: %s + %s", customer.first_name, customer.last_name
     )
     return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# LIST ALL CUSTOMERS
+######################################################################
+@app.route("/customers", methods=["GET"])
+def list_customers():
+    """Returns all of the Customers"""
+    app.logger.info("Request for customer list")
+
+    customers = []
+
+    # Parse any arguments from the query string
+    first_name = request.args.get("first_name")
+    last_name = request.args.get("last_name")
+    email = request.args.get("email")
+    password = request.args.get("password")
+    address = request.args.get("address")
+
+    if first_name:
+        app.logger.info("Find by first name: %s", first_name)
+        customers = Customer.find_by_first_name(first_name)
+    elif last_name:
+        app.logger.info("Find by last name: %s", last_name)
+        customers = Customer.find_by_last_name(last_name)
+    elif email:
+        app.logger.info("Find by email: %s", email)
+        customers = Customer.find_by_email(email)
+    elif password:
+        app.logger.info("Find by password: %s", password)
+        customers = Customer.find_by_password(password)
+    elif address:
+        app.logger.info("Find by address: %s", address)
+        customers = Customer.find_by_address(address)
+    else:
+        app.logger.info("Find all")
+        customers = Customer.all()
+
+    results = [customer.serialize() for customer in customers]
+    app.logger.info("Returning %d customers", len(results))
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
