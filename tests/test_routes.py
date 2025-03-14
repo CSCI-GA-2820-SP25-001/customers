@@ -125,10 +125,10 @@ class TestCustomerService(TestCase):
         self.assertEqual(new_customer["password"], test_customer.password)
         self.assertEqual(new_customer["address"], test_customer.address)
 
-
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------
+
     def test_get_customer(self):
         """It should Get a single Customer"""
         # get the id of a customer
@@ -150,7 +150,7 @@ class TestCustomerService(TestCase):
     # ----------------------------------------------------------
     # TEST LIST
     # ----------------------------------------------------------
-    
+
     def test_get_customer_list(self):
         """It should Get a list of Customers"""
         self._create_customers(5)
