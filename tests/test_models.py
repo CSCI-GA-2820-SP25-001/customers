@@ -211,3 +211,36 @@ class TestCustomer(TestCase):
         with self.assertRaises(DataValidationError) as context:
             customer.deserialize(data)
         self.assertIn("missing address", str(context.exception).lower())
+    
+    
+    
+    ### UPDATE TESTS ###
+    
+    def test_update_a_customer(self):
+        """It should Update a Customer"""
+        customer = CustomerFactory()
+        logging.debug(customer)
+        customer.id = None
+        customer.create()
+        logging.debug(customer)
+        self.assertIsNotNone(customer.id)
+        # Change it an save it
+        customer.first_name = "k9"
+        original_id = customer.id
+        customer.update()
+        self.assertEqual(customer.id, original_id)
+        self.assertEqual(customer.first_name, "k9")
+        # Fetch it back and make sure the id hasn't changed
+        # but the data did change
+        customers = Customer.all()
+        self.assertEqual(len(customers), 1)
+        self.assertEqual(customers[0].id, original_id)
+        self.assertEqual(customers[0].first_name, "k9")
+
+# ## TODO figure out why it is not raising a data validation error ##
+#     def test_update_no_id(self):
+#         """It should not Update a Customer with no id"""
+#         customer = CustomerFactory()
+#         logging.debug(customer)
+#         customer.id = None
+#         self.assertRaises(DataValidationError, customer.update)

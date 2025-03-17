@@ -43,6 +43,7 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
+
 ######################################################################
 # CREATE A NEW CUSTOMER
 ######################################################################
@@ -67,7 +68,7 @@ def create_customers():
 
     # Return the location of the new Customer
     location_url = url_for("get_customers", customer_id=customer.id, _external=True)
-    
+
     return (
         jsonify(customer.serialize()),
         status.HTTP_201_CREATED,
@@ -98,6 +99,39 @@ def get_customers(customer_id):
     app.logger.info(
         "Returning customer: %s + %s", customer.first_name, customer.last_name
     )
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# UPDATE AN EXISTING CUSTOMER
+######################################################################
+@app.route("/customers/<int:customer_id>", methods=["PUT"])
+def update_customers(customer_id):
+    """
+    Update a Customer
+
+    This endpoint will update a Customer based the body that is posted
+    """
+    app.logger.info("Request to Update a customer with id [%s]", customer_id)
+    check_content_type("application/json")
+
+    # Attempt to find the Customer and abort if not found
+    customer = Customer.find(customer_id)
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    # Update the Customer with the new data
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    customer.deserialize(data)
+
+    # Save the updates to the database
+    customer.update()
+
+    app.logger.info("Customer with ID: %d updated.", customer.id)
     return jsonify(customer.serialize()), status.HTTP_200_OK
 
 
