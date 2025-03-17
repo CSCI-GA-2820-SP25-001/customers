@@ -89,9 +89,14 @@ class TestCustomerService(TestCase):
     ######################################################################
 
     def test_index(self):
-        """It should call the home page"""
+        """It should call the home page and check the response"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("message", data)
+        self.assertEqual(data["message"], "Welcome to the Customer API")
 
     # ----------------------------------------------------------
     # TEST CREATE
@@ -125,10 +130,10 @@ class TestCustomerService(TestCase):
         self.assertEqual(new_customer["password"], test_customer.password)
         self.assertEqual(new_customer["address"], test_customer.address)
 
-
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------
+
     def test_get_customer(self):
         """It should Get a single Customer"""
         # get the id of a customer
@@ -161,7 +166,21 @@ class TestCustomerService(TestCase):
         new_customer = response.get_json()
         logging.debug(new_customer)
         new_customer["first_name"] = "unknown"
-        response = self.client.put(f"{BASE_URL}/{new_customer['id']}", json=new_customer)
+        response = self.client.put(
+            f"{BASE_URL}/{new_customer['id']}", json=new_customer
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_customer = response.get_json()
         self.assertEqual(updated_customer["first_name"], "unknown")
+
+    #  ----------------------------------------------------------
+    # TEST LIST
+    # ----------------------------------------------------------
+
+    def test_get_customer_list(self):
+        """It should Get a list of Customers"""
+        self._create_customers(5)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
