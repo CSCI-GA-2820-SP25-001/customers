@@ -21,5 +21,3 @@ class CustomerFactory(factory.Factory):
     address = factory.Faker("address")
     email = factory.Faker("email")
     password = FuzzyText(length=12)
-
-    # Todo: Add your other attributes here...

@@ -5,8 +5,8 @@ All of the models are stored in this module
 """
 
 import logging
-from flask_sqlalchemy import SQLAlchemy
 import re
+from flask_sqlalchemy import SQLAlchemy
 
 logger = logging.getLogger("flask.app")
 
@@ -81,15 +81,21 @@ class Customer(db.Model):
 
     def update(self):
         """
-        Updates a Customer to the database
+        Updates a Customer in the database.
+        Raises a DataValidationError if the Customer does not have an ID.
         """
+        if self.id is None:
+            raise DataValidationError("Cannot update Customer without an ID.")
+
         logger.info("Saving %s", self.first_name)
         try:
             db.session.commit()
         except Exception as e:
             db.session.rollback()
             logger.error("Error updating record: %s", self)
-            raise DataValidationError(e) from e
+            raise DataValidationError(
+                f"Database error while updating customer: {e}"
+            ) from e
 
     def delete(self):
         """Removes a Customer from the data store"""
@@ -138,7 +144,7 @@ class Customer(db.Model):
             ) from error
         except TypeError as error:
             raise DataValidationError("Invalid input data") from error
-            return self
+        return self
 
     ##################################################
     # CLASS METHODS
