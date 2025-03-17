@@ -89,9 +89,14 @@ class TestCustomerService(TestCase):
     ######################################################################
 
     def test_index(self):
-        """It should call the home page"""
+        """It should call the home page and check the response"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("message", data)
+        self.assertEqual(data["message"], "Welcome to the Customer API")
 
     # ----------------------------------------------------------
     # TEST CREATE
