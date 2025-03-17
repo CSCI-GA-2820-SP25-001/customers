@@ -33,9 +33,7 @@ from service.common import status  # HTTP Status Codes
 @app.route("/")
 def index():
     """Root URL response"""
-    return jsonify(
-        message="Welcome to the Customer API"
-    ), 200
+    return jsonify(message="Welcome to the Customer API"), 200
 
 
 ######################################################################
@@ -167,3 +165,25 @@ def check_content_type(content_type) -> None:
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         f"Content-Type must be {content_type}",
     )
+
+
+######################################################################
+# DELETE A CUSTOMER
+######################################################################
+@app.route("/customers/<int:customers_id>", methods=["DELETE"])
+def delete_customers(customers_id):
+    """
+    Delete a Customer
+
+    This endpoint will delete a Customer based the id specified in the path
+    """
+    app.logger.info("Request to Delete a customers with id [%s]", customers_id)
+
+    # Delete the Customer if it exists
+    customers = Customer.find(customers_id)
+    if customers:
+        app.logger.info("Customers with ID: %d found.", customers.id)
+        customers.delete()
+
+    app.logger.info("Customers with ID: %d delete complete.", customers_id)
+    return {}, status.HTTP_204_NO_CONTENT
