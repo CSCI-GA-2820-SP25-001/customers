@@ -1,42 +1,90 @@
-# NYU DevOps Project Template
+# Customers Service
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
-
 ## Overview
+The **Customers Service** is a microservice that represents customer accounts for an eCommerce platform. This service provides CRUD operations to manage customer information, including first name, last name, email, password, and address.
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+## Setup Instructions
 
-## Automatic Setup
+### Prerequisites
+Ensure you have the following installed on your system:
+- Python (>=3.8)
+- pip (Python package manager)
+- Flask
+- PostgreSQL (if using a database)
 
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
+### Installation
+1. Clone the repository:
+   ```sh
+   git clone <repository-url>
+   cd customers-service
+   ```
+2. Create and activate a virtual environment:
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+4. Set up environment variables:
+   ```sh
+   cp dot-env-example .env
+   ```
+   Update `.env` with necessary configurations.
+5. Initialize the database:
+   ```sh
+   flask db init
+   flask db migrate
+   flask db upgrade
+   ```
 
-## Manual Setup
+## Usage Guide
 
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
+### API Endpoints
 
-There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
-
-These should be copied using a bash shell as follows:
-
-```bash
-    cp .gitignore  ../<your_repo_folder>/
-    cp .flaskenv ../<your_repo_folder>/
-    cp .gitattributes ../<your_repo_folder>/
+#### Create a Customer
+**POST** `/customers`
+```json
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
+  "password": "securepassword",
+  "address": "123 Main St, Springfield"
+}
 ```
 
-## Contents
+#### Retrieve a Customer
+**GET** `/customers/{id}`
 
-The project contains the following:
+#### Update a Customer
+**PUT** `/customers/{id}`
+```json
+{
+  "first_name": "Jane"
+}
+```
+
+#### Delete a Customer
+**DELETE** `/customers/{id}`
+
+## Running Tests
+To run unit tests:
+```sh
+python -m unittest discover tests
+```
+
+## Project Structure
+The project contains the following directories and files:
 
 ```text
 .gitignore          - this will ignore vagrant and other metadata files
 .flaskenv           - Environment variables to configure Flask
-.gitattributes      - File to gix Windows CRLF issues
+.gitattributes      - File to fix Windows CRLF issues
 .devcontainers/     - Folder with support for VSCode Remote Containers
 dot-env-example     - copy to .env to use environment variables
 pyproject.toml      - Poetry list of Python libraries required by your code
@@ -60,6 +108,20 @@ tests/                     - test cases package
 └── test_routes.py         - test suite for service routes
 ```
 
+## Deployment
+To deploy the service, ensure you have:
+- A production-ready database (e.g., PostgreSQL, MySQL)
+- Environment variables set for production
+
+Deployment steps may vary based on the hosting provider (Heroku, AWS, etc.).
+
+## Contribution Guidelines
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature-xyz`)
+3. Commit changes (`git commit -m 'Add new feature'`)
+4. Push to branch (`git push origin feature-xyz`)
+5. Open a Pull Request
+
 ## License
 
 Copyright (c) 2016, 2025 [John Rofrano](https://www.linkedin.com/in/JohnRofrano/). All rights reserved.
@@ -67,3 +129,6 @@ Copyright (c) 2016, 2025 [John Rofrano](https://www.linkedin.com/in/JohnRofrano/
 Licensed under the Apache License. See [LICENSE](LICENSE)
 
 This repository is part of the New York University (NYU) masters class: **CSCI-GA.2820-001 DevOps and Agile Methodologies** created and taught by [John Rofrano](https://cs.nyu.edu/~rofrano/), Adjunct Instructor, NYU Courant Institute, Graduate Division, Computer Science, and NYU Stern School of Business.
+
+## Contact & Support
+For any issues, create a GitHub issue or contact the maintainers.
