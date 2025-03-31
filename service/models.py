@@ -48,6 +48,15 @@ class Customer(db.Model):
         db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False
     )
 
+    def __init__(
+        self, first_name=None, last_name=None, email=None, password=None, address=None
+    ):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email = email
+        self.password = password
+        self.address = address
+
     def __repr__(self):
         return f"<Customer {self.name} id=[{self.id}]>"
 
