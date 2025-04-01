@@ -63,13 +63,6 @@ class TestCustomer(TestCase):
         db.session.query(Customer).delete()
         db.session.commit()
 
-    # this was from arjun's commit but duplicated the below tearDown - also the app_context caused an error:
-    # RuntimeError: Working outside of application context.
-    # def tearDown(self):
-    #     """Runs after each test"""
-    #     db.session.remove()
-    #     self.app_context.pop()
-
     def tearDown(self):
         """This runs after each test"""
         db.session.remove()
@@ -120,9 +113,8 @@ class TestCustomer(TestCase):
         data = CustomerFactory().__dict__
         data.pop("email")  # explicitly remove email to test missing field handling
 
-        customer = Customer()
         with self.assertRaises(DataValidationError) as context:
-            customer.deserialize(data)
+            Customer(**data)
         self.assertIn("missing email", str(context.exception).lower())
 
     def test_serialize_customer(self):
@@ -177,9 +169,8 @@ class TestCustomer(TestCase):
         data = CustomerFactory().serialize()
         data.pop("first_name")
 
-        customer = Customer()
         with self.assertRaises(DataValidationError) as context:
-            customer.deserialize(data)
+            Customer(**data)
         self.assertIn("missing first_name", str(context.exception).lower())
 
     def test_create_customer_missing_last_name(self):
@@ -187,9 +178,8 @@ class TestCustomer(TestCase):
         data = CustomerFactory().serialize()
         data.pop("last_name")
 
-        customer = Customer()
         with self.assertRaises(DataValidationError) as context:
-            customer.deserialize(data)
+            Customer(**data)
         self.assertIn("missing last_name", str(context.exception).lower())
 
     def test_create_customer_missing_password(self):
@@ -197,9 +187,8 @@ class TestCustomer(TestCase):
         data = CustomerFactory().serialize()
         data.pop("password")
 
-        customer = Customer()
         with self.assertRaises(DataValidationError) as context:
-            customer.deserialize(data)
+            Customer(**data)
         self.assertIn("missing password", str(context.exception).lower())
 
     def test_create_customer_missing_address(self):
@@ -207,9 +196,8 @@ class TestCustomer(TestCase):
         data = CustomerFactory().serialize()
         data.pop("address")
 
-        customer = Customer()
         with self.assertRaises(DataValidationError) as context:
-            customer.deserialize(data)
+            Customer(**data)
         self.assertIn("missing address", str(context.exception).lower())
 
     # --------- UPDATE TESTS --------- #
