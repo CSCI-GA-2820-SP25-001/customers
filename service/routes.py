@@ -3,7 +3,7 @@
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# you may obtain a copy of the License at
 #
 # https://www.apache.org/licenses/LICENSE-2.0
 #
@@ -53,11 +53,9 @@ def create_customers():
     app.logger.info("Request to Create a Customer...")
     check_content_type("application/json")
 
-    customer = Customer()
-    # Get the data from the request and deserialize it
     data = request.get_json()
     app.logger.info("Processing: %s", data)
-    customer.deserialize(data)
+    customer = Customer.deserialize(data)
 
     # Save the new Customer to the database
     customer.create()
@@ -123,7 +121,7 @@ def update_customers(customer_id):
     # Update the Customer with the new data
     data = request.get_json()
     app.logger.info("Processing: %s", data)
-    customer.deserialize(data)
+    customer.update_from_dict(data)
 
     # Save the updates to the database
     customer.update()

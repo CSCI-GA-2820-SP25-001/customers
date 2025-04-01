@@ -49,11 +49,29 @@ class Customer(db.Model):
     )
 
     def __init__(self, **kwargs):
-        self.first_name = kwargs.get("first_name")
-        self.last_name = kwargs.get("last_name")
-        self.email = kwargs.get("email")
-        self.password = kwargs.get("password")
-        self.address = kwargs.get("address")
+        kwargs.pop("id", None)
+        try:
+            self.first_name = kwargs.pop("first_name")
+            self.last_name = kwargs.pop("last_name")
+            self.email = kwargs.pop("email")
+            self.password = kwargs.pop("password")
+            self.address = kwargs.pop("address")
+        except KeyError as e:
+            raise DataValidationError(f"missing {e.args[0]}")
+        super(Customer, self).__init__(**kwargs)
+
+        # require all fields
+        # Validate required fields
+        if self.first_name is None:
+            raise DataValidationError("missing first_name")
+        if self.last_name is None:
+            raise DataValidationError("missing last_name")
+        if self.email is None:
+            raise DataValidationError("missing email")
+        if self.password is None:
+            raise DataValidationError("missing password")
+        if self.address is None:
+            raise DataValidationError("missing address")
 
     def __repr__(self):
         return f"<Customer {self.first_name} {self.last_name} id=[{self.id}]>"
@@ -160,6 +178,19 @@ class Customer(db.Model):
             password=password,
             address=address,
         )
+
+    def update_from_dict(self, data):
+        # Update fields of a Customer instance from a dictionary. Only update the fields provided in data.
+        if "first_name" in data:
+            self.first_name = data["first_name"]
+        if "last_name" in data:
+            self.last_name = data["last_name"]
+        if "email" in data:
+            self.email = data["email"]
+        if "password" in data:
+            self.password = data["password"]
+        if "address" in data:
+            self.address = data["address"]
 
     ##################################################
     # CLASS METHODS

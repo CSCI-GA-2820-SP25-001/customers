@@ -110,7 +110,7 @@ class TestCustomer(TestCase):
 
     def test_create_customer_missing_email(self):
         """It should raise DataValidationError when email is missing"""
-        data = CustomerFactory().__dict__
+        data = CustomerFactory().serialize()
         data.pop("email")  # explicitly remove email to test missing field handling
 
         with self.assertRaises(DataValidationError) as context:
@@ -140,13 +140,13 @@ class TestCustomer(TestCase):
             if not cls._validate_email_format(email):
                 raise DataValidationError(f"Invalid email format: '{email}'")
 
-            return cls(**{
-                "first_name"=first_name,
-                "last_name"=last_name,
-                "email"=email,
-                "password"=password,
-                "address"=address,
-            })
+            return cls(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                password=password,
+                address=address,
+            )
 
         except KeyError as error:
             raise DataValidationError(
