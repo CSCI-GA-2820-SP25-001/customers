@@ -57,8 +57,8 @@ class Customer(db.Model):
             self.password = kwargs.pop("password")
             self.address = kwargs.pop("address")
         except KeyError as e:
-            raise DataValidationError(f"missing {e.args[0]}")
-        super(Customer, self).__init__(**kwargs)
+            raise DataValidationError(f"missing {e.args[0]}") from e
+        super().__init__(**kwargs)
 
         # require all fields
         # Validate required fields
@@ -180,7 +180,7 @@ class Customer(db.Model):
         )
 
     def update_from_dict(self, data):
-        # Update fields of a Customer instance from a dictionary. Only update the fields provided in data.
+        """Update fields of a Customer instance from a dictionary. Only update the fields provided in data."""
         if "first_name" in data:
             self.first_name = data["first_name"]
         if "last_name" in data:
