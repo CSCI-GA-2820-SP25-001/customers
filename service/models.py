@@ -48,14 +48,12 @@ class Customer(db.Model):
         db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False
     )
 
-    def __init__(
-        self, first_name=None, last_name=None, email=None, password=None, address=None
-    ):
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.password = password
-        self.address = address
+    def __init__(self, **kwargs):
+        self.first_name = kwargs.get("first_name")
+        self.last_name = kwargs.get("last_name")
+        self.email = kwargs.get("email")
+        self.password = kwargs.get("password")
+        self.address = kwargs.get("address")
 
     def __repr__(self):
         return f"<Customer {self.name} id=[{self.id}]>"
@@ -128,22 +126,23 @@ class Customer(db.Model):
             "password": self.password,
         }
 
-    def deserialize(self, data):
+    @classmethod
+    def deserialize(cls, data):
         """
-        Deserializes a Customer from a dictionary and validates email format
+        Deserializes a Customer from a dictionary and validates email format.
 
         Args:
             data (dict): A dictionary containing the customer data
         """
         try:
-            self.first_name = data["first_name"]
-            self.last_name = data["last_name"]
-            self.email = data["email"]
-            self.password = data["password"]
-            self.address = data["address"]
+            first_name = data["first_name"]
+            last_name = data["last_name"]
+            email = data["email"]
+            password = data["password"]
+            address = data["address"]
 
-            if not self._validate_email_format(self.email):
-                raise DataValidationError(f"Invalid email format: '{self.email}'")
+            if not cls._validate_email_format(email):
+                raise DataValidationError(f"Invalid email format: '{email}'")
 
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
@@ -153,7 +152,14 @@ class Customer(db.Model):
             ) from error
         except TypeError as error:
             raise DataValidationError("Invalid input data") from error
-        return self
+
+        return cls(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            password=password,
+            address=address,
+        )
 
     ##################################################
     # CLASS METHODS
