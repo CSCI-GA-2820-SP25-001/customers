@@ -17,7 +17,8 @@
 					"testdb"			
 					"creds",
 					"virtualenvs",
-					"shopcarts"
+					"shopcarts",
+					"pylint"
 				],
 				"[python]": {
 					"editor.defaultFormatter": "ms-python.black-formatter",

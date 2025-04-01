@@ -140,13 +140,13 @@ class TestCustomer(TestCase):
             if not cls._validate_email_format(email):
                 raise DataValidationError(f"Invalid email format: '{email}'")
 
-            return cls(
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                password=password,
-                address=address,
-            )
+            return cls(**{
+                "first_name"=first_name,
+                "last_name"=last_name,
+                "email"=email,
+                "password"=password,
+                "address"=address,
+            })
 
         except KeyError as error:
             raise DataValidationError(

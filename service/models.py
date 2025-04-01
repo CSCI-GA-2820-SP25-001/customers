@@ -56,7 +56,7 @@ class Customer(db.Model):
         self.address = kwargs.get("address")
 
     def __repr__(self):
-        return f"<Customer {self.name} id=[{self.id}]>"
+        return f"<Customer {self.first_name} {self.last_name} id=[{self.id}]>"
 
     def create(self):
         """
