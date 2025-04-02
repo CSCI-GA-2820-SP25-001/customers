@@ -210,13 +210,13 @@ class Customer(db.Model):
 
     @classmethod
     def find_by_name(cls, name):
-        """Returns all Customers with the given name
+        """Returns all Customers with the given first_name
 
         Args:
             name (string): the name of the Customers you want to match
         """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.name == name)
+        return cls.query.filter(cls.first_name == name)
 
     @staticmethod
     def _validate_email_format(email):

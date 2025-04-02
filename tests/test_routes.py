@@ -22,10 +22,13 @@ TestCustomer API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from unittest.mock import patch
 from wsgi import app
 from service.common import status
 from service.models import db, Customer
 from .factories import CustomerFactory
+from service.routes import get_customers  # Add this import at the top
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -98,6 +101,30 @@ class TestCustomerService(TestCase):
         self.assertIn("message", data)
         self.assertEqual(data["message"], "Welcome to the Customer API")
 
+    def test_method_not_allowed(self):
+        """It should return 405 Method Not Allowed"""
+        response = self.client.put("/")  # PUT not allowed on root
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_bad_request(self):
+        """It should return 400 Bad Request"""
+        # Force Flask to raise a 400 — e.g., by sending bad JSON
+        response = self.client.post(
+            BASE_URL, data="{bad json", content_type="application/json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # def test_internal_server_error(self):
+    #     """It should return 500 Internal Server Error"""
+    #     with patch("service.models.Customer.find", side_effect=Exception("boom")):
+    #         response = self.client.get(f"{BASE_URL}/123", follow_redirects=True)
+    #         self.assertEqual(
+    #             response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+    #         )
+    #         data = response.get_json()
+    #         self.assertEqual(data["error"], "Internal Server Error")
+    #         self.assertIn("boom", data["message"])
+
     # ----------------------------------------------------------
     # TEST CREATE
     # ----------------------------------------------------------
@@ -130,6 +157,20 @@ class TestCustomerService(TestCase):
         self.assertEqual(new_customer["password"], test_customer.password)
         self.assertEqual(new_customer["address"], test_customer.address)
 
+    def test_create_customer_no_content_type(self):
+        """It should fail to create a customer if Content-Type is missing"""
+        response = self.client.post(BASE_URL, data="{}")  # no content_type set
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        data = response.get_json()
+        self.assertIn("Content-Type must be application/json", data["message"])
+
+    def test_create_customer_wrong_content_type(self):
+        """It should fail to create a customer if Content-Type is incorrect"""
+        response = self.client.post(BASE_URL, data="{}", content_type="text/plain")
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        data = response.get_json()
+        self.assertIn("Content-Type must be application/json", data["message"])
+
     # ----------------------------------------------------------
     # TEST READ
     # ----------------------------------------------------------
@@ -151,6 +192,56 @@ class TestCustomerService(TestCase):
         data = response.get_json()
         logging.debug("Response data = %s", data)
         self.assertIn("was not found", data["message"])
+
+    def test_get_deleted_customer(self):
+        """It should return 404 when trying to GET a deleted customer"""
+        # Create a customer and delete it
+        customer = self._create_customers(1)[0]
+        del_response = self.client.delete(f"{BASE_URL}/{customer.id}")
+        self.assertEqual(del_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Try to GET the deleted customer
+        get_response = self.client.get(f"{BASE_URL}/{customer.id}")
+        self.assertEqual(get_response.status_code, status.HTTP_404_NOT_FOUND)
+        data = get_response.get_json()
+        self.assertIn("was not found", data["message"])
+
+    def test_direct_call_to_get_customers(self):
+        """[DEBUG] Directly call get_customers() to trigger line 116"""
+        customer = self._create_customers(1)[0]
+        with app.test_request_context():  # Needed for jsonify to work
+            response, status_code = get_customers(customer.id)
+            self.assertEqual(status_code, 200)
+
+    def test_call_get_customers_directly(self):
+        """It should directly call get_customers to trigger line 116"""
+        customer = self._create_customers(1)[0]
+        with app.test_request_context():
+            response, code = get_customers(customer.id)
+            self.assertEqual(code, status.HTTP_200_OK)
+            self.assertEqual(response.get_json()["id"], customer.id)
+
+    # ----------------------------------------------------------
+    # TEST GET / QUERY
+    # ----------------------------------------------------------
+
+    # def test_query_customers_by_first_name(self):
+    #     """It should return customers filtered by first_name query param"""
+    #     customer = CustomerFactory(first_name="Zelda")
+    #     customer.create()
+    #     response = self.client.get("/customers", query_string={"first_name": "Zelda"})
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertTrue(b"Zelda" in response.data)
+
+    # def test_query_customers_by_address(self):
+    #     """It should return customers filtered by address query param"""
+    #     customer = CustomerFactory(address="123 Rainbow Road")
+    #     customer.create()
+    #     response = self.client.get(
+    #         "/customers", query_string={"address": "123 Rainbow Road"}
+    #     )
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertTrue(b"123 Rainbow Road" in response.data)
 
     # ----------------------------------------------------------
     # TEST UPDATE
