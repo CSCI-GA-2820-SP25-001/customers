@@ -114,16 +114,33 @@ class TestCustomerService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_internal_server_error(self):
-    #     """It should return 500 Internal Server Error"""
-    #     with patch("service.models.Customer.find", side_effect=Exception("boom")):
-    #         response = self.client.get(f"{BASE_URL}/123", follow_redirects=True)
-    #         self.assertEqual(
-    #             response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
-    #         )
-    #         data = response.get_json()
-    #         self.assertEqual(data["error"], "Internal Server Error")
-    #         self.assertIn("boom", data["message"])
+    def test_internal_server_error(self):
+        """It should return 500 Internal Server Error"""
+        app.config["PROPAGATE_EXCEPTIONS"] = (
+            False  # this line tells Flask to use error handler
+        )
+        response = self.client.get("/error")
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        data = response.get_json()
+        self.assertEqual(data["error"], "Internal Server Error")
+        self.assertIn("Internal Server Error", data["message"])
+
+    def test_trigger_validation_error(self):
+        """It should return 400 from DataValidationError handler"""
+        # Create an invalid payload missing a required field
+        bad_payload = {"email": "bad@example.com"}  # missing first_name, etc.
+        response = self.client.post(BASE_URL, json=bad_payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.get_json()
+        self.assertEqual(data["error"], "Bad Request")
+
+    def test_logging_formatter_is_set(self):
+        """It should apply the logging formatter to all handlers"""
+        from service import create_app
+
+        app = create_app()
+        for handler in app.logger.handlers:
+            assert handler.formatter is not None  # formatter was applied
 
     # ----------------------------------------------------------
     # TEST CREATE

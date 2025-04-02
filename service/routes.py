@@ -198,6 +198,12 @@ def check_content_type(content_type) -> None:
     )
 
 
+@app.route("/error")
+def trigger_error():
+    """This route is only used to test 500 error handler"""
+    raise Exception("This is a test error for HTTP 500")
+
+
 ######################################################################
 # DELETE A CUSTOMER
 ######################################################################
