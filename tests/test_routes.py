@@ -22,12 +22,14 @@ TestCustomer API Service Test Suite
 import os
 import logging
 from unittest import TestCase
-from unittest.mock import patch
+
+# from unittest.mock import patch
 from wsgi import app
 from service.common import status
 from service.models import db, Customer
-from .factories import CustomerFactory
 from service.routes import get_customers  # Add this import at the top
+from service import create_app
+from .factories import CustomerFactory
 
 
 DATABASE_URI = os.getenv(
@@ -136,10 +138,9 @@ class TestCustomerService(TestCase):
 
     def test_logging_formatter_is_set(self):
         """It should apply the logging formatter to all handlers"""
-        from service import create_app
 
-        app = create_app()
-        for handler in app.logger.handlers:
+        created_app = create_app()
+        for handler in created_app.logger.handlers:
             assert handler.formatter is not None  # formatter was applied
 
     # ----------------------------------------------------------
@@ -227,7 +228,7 @@ class TestCustomerService(TestCase):
         """[DEBUG] Directly call get_customers() to trigger line 116"""
         customer = self._create_customers(1)[0]
         with app.test_request_context():  # Needed for jsonify to work
-            response, status_code = get_customers(customer.id)
+            _, status_code = get_customers(customer.id)
             self.assertEqual(status_code, 200)
 
     def test_call_get_customers_directly(self):
