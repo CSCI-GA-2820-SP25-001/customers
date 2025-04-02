@@ -48,8 +48,33 @@ class Customer(db.Model):
         db.DateTime, default=db.func.now(), onupdate=db.func.now(), nullable=False
     )
 
+    def __init__(self, **kwargs):
+        kwargs.pop("id", None)
+        try:
+            self.first_name = kwargs.pop("first_name")
+            self.last_name = kwargs.pop("last_name")
+            self.email = kwargs.pop("email")
+            self.password = kwargs.pop("password")
+            self.address = kwargs.pop("address")
+        except KeyError as e:
+            raise DataValidationError(f"missing {e.args[0]}") from e
+        super().__init__(**kwargs)
+
+        # require all fields
+        # Validate required fields
+        if self.first_name is None:
+            raise DataValidationError("missing first_name")
+        if self.last_name is None:
+            raise DataValidationError("missing last_name")
+        if self.email is None:
+            raise DataValidationError("missing email")
+        if self.password is None:
+            raise DataValidationError("missing password")
+        if self.address is None:
+            raise DataValidationError("missing address")
+
     def __repr__(self):
-        return f"<Customer {self.name} id=[{self.id}]>"
+        return f"<Customer {self.first_name} {self.last_name} id=[{self.id}]>"
 
     def create(self):
         """
@@ -119,22 +144,23 @@ class Customer(db.Model):
             "password": self.password,
         }
 
-    def deserialize(self, data):
+    @classmethod
+    def deserialize(cls, data):
         """
-        Deserializes a Customer from a dictionary and validates email format
+        Deserializes a Customer from a dictionary and validates email format.
 
         Args:
             data (dict): A dictionary containing the customer data
         """
         try:
-            self.first_name = data["first_name"]
-            self.last_name = data["last_name"]
-            self.email = data["email"]
-            self.password = data["password"]
-            self.address = data["address"]
+            first_name = data["first_name"]
+            last_name = data["last_name"]
+            email = data["email"]
+            password = data["password"]
+            address = data["address"]
 
-            if not self._validate_email_format(self.email):
-                raise DataValidationError(f"Invalid email format: '{self.email}'")
+            if not cls._validate_email_format(email):
+                raise DataValidationError(f"Invalid email format: '{email}'")
 
         except AttributeError as error:
             raise DataValidationError("Invalid attribute: " + error.args[0]) from error
@@ -144,7 +170,27 @@ class Customer(db.Model):
             ) from error
         except TypeError as error:
             raise DataValidationError("Invalid input data") from error
-        return self
+
+        return cls(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            password=password,
+            address=address,
+        )
+
+    def update_from_dict(self, data):
+        """Update fields of a Customer instance from a dictionary. Only update the fields provided in data."""
+        if "first_name" in data:
+            self.first_name = data["first_name"]
+        if "last_name" in data:
+            self.last_name = data["last_name"]
+        if "email" in data:
+            self.email = data["email"]
+        if "password" in data:
+            self.password = data["password"]
+        if "address" in data:
+            self.address = data["address"]
 
     ##################################################
     # CLASS METHODS
@@ -164,13 +210,13 @@ class Customer(db.Model):
 
     @classmethod
     def find_by_name(cls, name):
-        """Returns all Customers with the given name
+        """Returns all Customers with the given first_name
 
         Args:
             name (string): the name of the Customers you want to match
         """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.name == name)
+        return cls.query.filter(cls.first_name == name)
 
     @staticmethod
     def _validate_email_format(email):
