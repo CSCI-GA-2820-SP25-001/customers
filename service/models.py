@@ -6,7 +6,10 @@ All of the models are stored in this module
 
 import logging
 import re
+import enum
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Enum
+
 
 logger = logging.getLogger("flask.app")
 
@@ -35,12 +38,20 @@ class Customer(db.Model):
     # Address (one string)
     # creation date
 
+    class StatusEnum(str, enum.Enum):
+        """Class for the enumeration for the valid statuses for a Customer"""
+
+        ACTIVE = "active"
+        SUSPENDED = "suspended"
+        DELETED = "deleted"
+
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(63))
     last_name = db.Column(db.String(63))
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(63))
     address = db.Column(db.String(255))
+    status = db.Column(Enum(StatusEnum), nullable=False, default=StatusEnum.ACTIVE)
 
     # Database auditing fields
     creation_date = db.Column(db.DateTime, default=db.func.now(), nullable=False)
@@ -56,6 +67,11 @@ class Customer(db.Model):
             self.email = kwargs.pop("email")
             self.password = kwargs.pop("password")
             self.address = kwargs.pop("address")
+            status_str = kwargs.pop("status", "active")
+            try:
+                self.status = Customer.StatusEnum(status_str)
+            except ValueError as exc:
+                raise DataValidationError(f"Invalid status: {status_str}") from exc
         except KeyError as e:
             raise DataValidationError(f"missing {e.args[0]}") from e
         super().__init__(**kwargs)
@@ -142,6 +158,7 @@ class Customer(db.Model):
             "email": self.email,
             "address": self.address,
             "password": self.password,
+            "status": self.status.value,
         }
 
     @classmethod
@@ -158,6 +175,11 @@ class Customer(db.Model):
             email = data["email"]
             password = data["password"]
             address = data["address"]
+
+            try:
+                status = Customer.StatusEnum(data["status"])
+            except ValueError as exc:
+                raise DataValidationError(f"Invalid status: {data['status']}") from exc
 
             if not cls._validate_email_format(email):
                 raise DataValidationError(f"Invalid email format: '{email}'")
@@ -177,6 +199,7 @@ class Customer(db.Model):
             email=email,
             password=password,
             address=address,
+            status=status,
         )
 
     def update_from_dict(self, data):
@@ -191,6 +214,11 @@ class Customer(db.Model):
             self.password = data["password"]
         if "address" in data:
             self.address = data["address"]
+        if "status" in data:
+            try:
+                self.status = Customer.StatusEnum(data["status"])
+            except ValueError as exc:
+                raise DataValidationError(f"Invalid status: {data['status']}") from exc
 
     ##################################################
     # CLASS METHODS
