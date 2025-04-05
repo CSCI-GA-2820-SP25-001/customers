@@ -312,3 +312,86 @@ class TestCustomerService(TestCase):
         response = self.client.delete(f"{BASE_URL}/0")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)
+
+    # ----------------------------------------------------------
+    # TEST STATEFUL ACTION
+    # ----------------------------------------------------------
+
+    def test_activate_customer(self):
+        """It should activate a suspended Customer"""
+        customer = self._create_customers(1)[0]
+        # Simulate suspended status
+        customer.status = "suspended"
+        customer.update()
+
+        response = self.client.put(
+            f"{BASE_URL}/{customer.id}/action",
+            json={"action": "activate"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["status"], "active")
+
+    def test_suspend_customer(self):
+        """It should suspend an active Customer"""
+        customer = self._create_customers(1)[0]
+
+        response = self.client.put(
+            f"{BASE_URL}/{customer.id}/action",
+            json={"action": "suspend"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["status"], "suspended")
+
+    def test_idempotent_action(self):
+        """It should not change status if already in desired state"""
+        customer = self._create_customers(1)[0]
+
+        response = self.client.put(
+            f"{BASE_URL}/{customer.id}/action",
+            json={"action": "activate"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["status"], "active")  # Still active
+
+    def test_action_missing_field(self):
+        """It should return 400 when action is missing"""
+        customer = self._create_customers(1)[0]
+
+        response = self.client.put(
+            f"{BASE_URL}/{customer.id}/action",
+            json={},  # missing "action"
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.get_json()
+        self.assertIn("Invalid action", data["message"])
+
+    def test_action_invalid_value(self):
+        """It should return 400 for invalid action"""
+        customer = self._create_customers(1)[0]
+
+        response = self.client.put(
+            f"{BASE_URL}/{customer.id}/action",
+            json={"action": "freeze"},  # unsupported action
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.get_json()
+        self.assertIn("Invalid action", data["message"])
+
+    def test_action_customer_not_found(self):
+        """It should return 404 when Customer is not found"""
+        response = self.client.put(
+            f"{BASE_URL}/999999/action",
+            json={"action": "suspend"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])

@@ -130,6 +130,58 @@ def update_customers(customer_id):
     return jsonify(customer.serialize()), status.HTTP_200_OK
 
 
+######################################################################
+# STATEFUL ACTION ENDPOINT
+######################################################################
+@app.route("/customers/<int:customer_id>/action", methods=["PUT"])
+def customer_action(customer_id):
+    """
+    Perform a stateful action on a Customer (e.g., activate, suspend)
+
+    This endpoint supports actions that change the customer's status.
+    """
+    app.logger.info("Request to perform action on Customer with id [%s]", customer_id)
+    check_content_type("application/json")
+
+    customer = Customer.find(customer_id)
+    if not customer:
+        app.logger.warning("Customer with id [%s] not found.", customer_id)
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    data = request.get_json()
+    action = data.get("action")
+
+    if action not in ["activate", "suspend"]:
+        app.logger.warning("Invalid action attempted: %s", action)
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Invalid action. Must be 'activate' or 'suspend'.",
+        )
+
+    if action == "activate" and customer.status != "active":
+        customer.status = "active"
+        app.logger.info("Customer with id [%s] activated.", customer.id)
+        customer.update()
+    elif action == "suspend" and customer.status != "suspended":
+        customer.status = "suspended"
+        app.logger.info("Customer with id [%s] suspended.", customer.id)
+        customer.update()
+    else:
+        app.logger.info(
+            "No status change needed for Customer with id [%s]", customer.id
+        )
+
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
+    # NOTE: In the future, we may support 'delete' as a soft-delete state change via this endpoint.
+    # For example:
+    #   PUT /customers/<id>/action { "action": "delete" }
+    # This is not implemented yet and is not part of the current requirements.
+
+
 #####################################################################
 # LIST ALL CUSTOMERS
 ######################################################################
