@@ -282,6 +282,28 @@ class TestCustomerService(TestCase):
         updated_customer = response.get_json()
         self.assertEqual(updated_customer["first_name"], "unknown")
 
+    def test_update_nonexistent_customer(self):
+        """It should return 404 when trying to update a non-existent customer"""
+        fake_id = 999999
+        update_data = {
+            "first_name": "Ghost",
+            "last_name": "User",
+            "email": "ghost@example.com",
+            "password": "invisible123",
+            "address": "404 Nowhere Lane",
+            "status": "active",
+        }
+
+        response = self.client.put(
+            f"{BASE_URL}/{fake_id}",
+            json=update_data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
+
     #  ----------------------------------------------------------
     # TEST LIST
     # ----------------------------------------------------------
@@ -320,10 +342,18 @@ class TestCustomerService(TestCase):
     def test_activate_customer(self):
         """It should activate a suspended Customer"""
         customer = self._create_customers(1)[0]
-        # Simulate suspended status
-        customer.status = "suspended"
-        customer.update()
 
+        # First suspend the customer using the endpoint (safer and guaranteed to persist)
+        response = self.client.put(
+            f"{BASE_URL}/{customer.id}/action",
+            json={"action": "suspend"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["status"], "suspended")
+
+        # Now activate the same customer
         response = self.client.put(
             f"{BASE_URL}/{customer.id}/action",
             json={"action": "activate"},
