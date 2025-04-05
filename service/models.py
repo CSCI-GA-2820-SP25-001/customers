@@ -41,6 +41,7 @@ class Customer(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(63))
     address = db.Column(db.String(255))
+    status = db.Column(db.String(63), nullable=False, default="active")
 
     # Database auditing fields
     creation_date = db.Column(db.DateTime, default=db.func.now(), nullable=False)
@@ -56,6 +57,7 @@ class Customer(db.Model):
             self.email = kwargs.pop("email")
             self.password = kwargs.pop("password")
             self.address = kwargs.pop("address")
+            self.status = kwargs.pop("status", "active")
         except KeyError as e:
             raise DataValidationError(f"missing {e.args[0]}") from e
         super().__init__(**kwargs)
@@ -72,6 +74,8 @@ class Customer(db.Model):
             raise DataValidationError("missing password")
         if self.address is None:
             raise DataValidationError("missing address")
+        if self.status not in ["active", "suspended", "deleted"]:
+             raise DataValidationError(f"Invalid status: {self.status}")
 
     def __repr__(self):
         return f"<Customer {self.first_name} {self.last_name} id=[{self.id}]>"
@@ -142,6 +146,7 @@ class Customer(db.Model):
             "email": self.email,
             "address": self.address,
             "password": self.password,
+            "status": self.status,
         }
 
     @classmethod
@@ -158,6 +163,10 @@ class Customer(db.Model):
             email = data["email"]
             password = data["password"]
             address = data["address"]
+            status = data.get("status", "active")
+
+            if status not in ["active", "suspended", "deleted"]:
+                 raise DataValidationError(f"Invalid status: {status}")
 
             if not cls._validate_email_format(email):
                 raise DataValidationError(f"Invalid email format: '{email}'")
@@ -177,6 +186,7 @@ class Customer(db.Model):
             email=email,
             password=password,
             address=address,
+            status=status,
         )
 
     def update_from_dict(self, data):
@@ -191,6 +201,10 @@ class Customer(db.Model):
             self.password = data["password"]
         if "address" in data:
             self.address = data["address"]
+        if "status" in data:
+            if data["status"] not in ["active", "suspended", "deleted"]:
+                raise DataValidationError(f"Invalid status: {data['status']}")
+            self.status = data["status"]
 
     ##################################################
     # CLASS METHODS
