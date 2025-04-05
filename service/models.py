@@ -6,7 +6,10 @@ All of the models are stored in this module
 
 import logging
 import re
+import enum
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Enum
+
 
 logger = logging.getLogger("flask.app")
 
@@ -35,13 +38,20 @@ class Customer(db.Model):
     # Address (one string)
     # creation date
 
+    class StatusEnum(str, enum.Enum):
+        """Class for the enumeration for the valid statuses for a Customer"""
+
+        ACTIVE = "active"
+        SUSPENDED = "suspended"
+        DELETED = "deleted"
+
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(63))
     last_name = db.Column(db.String(63))
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(63))
     address = db.Column(db.String(255))
-    status = db.Column(db.String(63), nullable=False, default="active")
+    status = db.Column(Enum(StatusEnum), nullable=False, default=StatusEnum.ACTIVE)
 
     # Database auditing fields
     creation_date = db.Column(db.DateTime, default=db.func.now(), nullable=False)
@@ -57,7 +67,11 @@ class Customer(db.Model):
             self.email = kwargs.pop("email")
             self.password = kwargs.pop("password")
             self.address = kwargs.pop("address")
-            self.status = kwargs.pop("status", "active")
+            status_str = kwargs.pop("status", "active")
+            try:
+                self.status = Customer.StatusEnum(status_str)
+            except ValueError as exc:
+                raise DataValidationError(f"Invalid status: {status_str}") from exc
         except KeyError as e:
             raise DataValidationError(f"missing {e.args[0]}") from e
         super().__init__(**kwargs)
@@ -74,8 +88,6 @@ class Customer(db.Model):
             raise DataValidationError("missing password")
         if self.address is None:
             raise DataValidationError("missing address")
-        if self.status not in ["active", "suspended", "deleted"]:
-             raise DataValidationError(f"Invalid status: {self.status}")
 
     def __repr__(self):
         return f"<Customer {self.first_name} {self.last_name} id=[{self.id}]>"
@@ -146,7 +158,7 @@ class Customer(db.Model):
             "email": self.email,
             "address": self.address,
             "password": self.password,
-            "status": self.status,
+            "status": self.status.value,
         }
 
     @classmethod
@@ -163,10 +175,11 @@ class Customer(db.Model):
             email = data["email"]
             password = data["password"]
             address = data["address"]
-            status = data.get("status", "active")
 
-            if status not in ["active", "suspended", "deleted"]:
-                 raise DataValidationError(f"Invalid status: {status}")
+            try:
+                status = Customer.StatusEnum(data["status"])
+            except ValueError as exc:
+                raise DataValidationError(f"Invalid status: {data['status']}") from exc
 
             if not cls._validate_email_format(email):
                 raise DataValidationError(f"Invalid email format: '{email}'")
@@ -202,9 +215,10 @@ class Customer(db.Model):
         if "address" in data:
             self.address = data["address"]
         if "status" in data:
-            if data["status"] not in ["active", "suspended", "deleted"]:
-                raise DataValidationError(f"Invalid status: {data['status']}")
-            self.status = data["status"]
+            try:
+                self.status = Customer.StatusEnum(data["status"])
+            except ValueError as exc:
+                raise DataValidationError(f"Invalid status: {data['status']}") from exc
 
     ##################################################
     # CLASS METHODS
