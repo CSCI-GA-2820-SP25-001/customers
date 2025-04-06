@@ -23,7 +23,7 @@ and Delete Customer
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Customer
+from service.models import Customer, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 
@@ -187,35 +187,29 @@ def customer_action(customer_id):
 ######################################################################
 @app.route("/customers", methods=["GET"])
 def list_customers():
-    """Returns all of the Customers"""
+    """
+    Returns all of the Customers, or filters by query parameters if provided.
+
+    Supports multiple query parameters with case-insensitive and partial matching.
+    Example: /customers?first_name=Al will return all customers whose first name includes "Al".
+
+    Returns:
+        A JSON list of customer dictionaries and HTTP 200 status
+    """
     app.logger.info("Request for customer list")
 
+    query_params = request.args.to_dict()
     customers = []
 
-    # Parse any arguments from the query string
-    first_name = request.args.get("first_name")
-    last_name = request.args.get("last_name")
-    email = request.args.get("email")
-    password = request.args.get("password")
-    address = request.args.get("address")
-
-    if first_name:
-        app.logger.info("Find by first name: %s", first_name)
-        customers = Customer.find_by_first_name(first_name)
-    elif last_name:
-        app.logger.info("Find by last name: %s", last_name)
-        customers = Customer.find_by_last_name(last_name)
-    elif email:
-        app.logger.info("Find by email: %s", email)
-        customers = Customer.find_by_email(email)
-    elif password:
-        app.logger.info("Find by password: %s", password)
-        customers = Customer.find_by_password(password)
-    elif address:
-        app.logger.info("Find by address: %s", address)
-        customers = Customer.find_by_address(address)
+    if query_params:
+        app.logger.info("Filtering with query parameters: %s", query_params)
+        try:
+            customers = Customer.filter_by_query(**query_params)
+        except DataValidationError as e:
+            app.logger.warning("Data validation error: %s", str(e))
+            abort(status.HTTP_400_BAD_REQUEST, str(e))
     else:
-        app.logger.info("Find all")
+        app.logger.info("No query parameters provided. Returning all customers.")
         customers = Customer.all()
 
     results = [customer.serialize() for customer in customers]

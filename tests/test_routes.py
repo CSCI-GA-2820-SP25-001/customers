@@ -240,28 +240,6 @@ class TestCustomerService(TestCase):
             self.assertEqual(response.get_json()["id"], customer.id)
 
     # ----------------------------------------------------------
-    # TEST GET / QUERY
-    # ----------------------------------------------------------
-
-    # def test_query_customers_by_first_name(self):
-    #     """It should return customers filtered by first_name query param"""
-    #     customer = CustomerFactory(first_name="Zelda")
-    #     customer.create()
-    #     response = self.client.get("/customers", query_string={"first_name": "Zelda"})
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertTrue(b"Zelda" in response.data)
-
-    # def test_query_customers_by_address(self):
-    #     """It should return customers filtered by address query param"""
-    #     customer = CustomerFactory(address="123 Rainbow Road")
-    #     customer.create()
-    #     response = self.client.get(
-    #         "/customers", query_string={"address": "123 Rainbow Road"}
-    #     )
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertTrue(b"123 Rainbow Road" in response.data)
-
-    # ----------------------------------------------------------
     # TEST UPDATE
     # ----------------------------------------------------------
     def test_update_customer(self):
@@ -305,7 +283,7 @@ class TestCustomerService(TestCase):
         self.assertIn("was not found", data["message"])
 
     #  ----------------------------------------------------------
-    # TEST LIST
+    # TEST LIST / QUERY
     # ----------------------------------------------------------
 
     def test_get_customer_list(self):
@@ -315,6 +293,115 @@ class TestCustomerService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), 5)
+
+    def test_list_customers_no_filters(self):
+        """It should return all customers when no filters are provided"""
+        self._create_customers(3)  # Create 3 customers
+        response = self.client.get(BASE_URL)  # No query parameters
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 3)
+
+    def test_list_customers_filter_by_first_name(self):
+        """It should return customers matching partial first_name (case-insensitive)"""
+        customer_1 = CustomerFactory(first_name="Alice", last_name="Smith")
+        customer_2 = CustomerFactory(first_name="Alina", last_name="Smythe")
+        customer_3 = CustomerFactory(first_name="Bob", last_name="Jones")
+        for customer in [customer_1, customer_2, customer_3]:
+            response = self.client.post(BASE_URL, json=customer.serialize())
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Filter by partial, case-insensitive match on first_name
+        response = self.client.get(BASE_URL, query_string={"first_name": "ali"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.get_json()
+        self.assertEqual(len(results), 2)
+        self.assertTrue(any("Alice" in c["first_name"] for c in results))
+        self.assertTrue(any("Alina" in c["first_name"] for c in results))
+
+    def test_list_customers_filter_by_last_name(self):
+        """It should return customers matching partial last_name (case-insensitive)"""
+        c1 = CustomerFactory(last_name="Johnson")
+        c2 = CustomerFactory(last_name="Johnston")
+        c3 = CustomerFactory(last_name="Doe")
+        for c in [c1, c2, c3]:
+            self.client.post(BASE_URL, json=c.serialize())
+
+        response = self.client.get(BASE_URL, query_string={"last_name": "john"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.get_json()
+        self.assertEqual(len(results), 2)
+        self.assertTrue(all("john" in c["last_name"].lower() for c in results))
+
+    def test_list_customers_filter_by_email(self):
+        """It should return customers matching partial email (case-insensitive)"""
+        c1 = CustomerFactory(email="alice@example.com")
+        c2 = CustomerFactory(email="bob@example.com")
+        c3 = CustomerFactory(email="support@another.com")
+        for c in [c1, c2, c3]:
+            self.client.post(BASE_URL, json=c.serialize())
+
+        response = self.client.get(BASE_URL, query_string={"email": "example"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.get_json()
+        self.assertEqual(len(results), 2)
+        self.assertTrue(all("example" in c["email"] for c in results))
+
+    def test_list_customers_filter_by_address(self):
+        """It should return customers matching partial address (case-insensitive)"""
+        c1 = CustomerFactory(address="123 Rainbow Lane")
+        c2 = CustomerFactory(address="456 Rainstorm Blvd")
+        c3 = CustomerFactory(address="789 Sunshine St")
+        for c in [c1, c2, c3]:
+            self.client.post(BASE_URL, json=c.serialize())
+
+        response = self.client.get(BASE_URL, query_string={"address": "rain"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.get_json()
+        self.assertEqual(len(results), 2)
+        self.assertTrue(all("rain" in c["address"].lower() for c in results))
+
+    def test_list_customers_filter_by_password(self):
+        """It should return customers matching partial password (case-insensitive)"""
+        c1 = CustomerFactory(password="SuperSecret123")
+        c2 = CustomerFactory(password="superman456")
+        c3 = CustomerFactory(password="notmatching")
+        for c in [c1, c2, c3]:
+            self.client.post(BASE_URL, json=c.serialize())
+
+        response = self.client.get(BASE_URL, query_string={"password": "super"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.get_json()
+        self.assertEqual(len(results), 2)
+        self.assertTrue(all("super" in c["password"].lower() for c in results))
+
+    def test_list_customers_filter_by_multiple_fields(self):
+        """It should return customers matching multiple fields (case-insensitive)"""
+        c1 = CustomerFactory(first_name="Alice", last_name="Johnson")
+        c2 = CustomerFactory(first_name="Alicia", last_name="Johnson")
+        c3 = CustomerFactory(first_name="Alice", last_name="Smith")
+        c4 = CustomerFactory(first_name="Bob", last_name="Johnson")
+        for c in [c1, c2, c3, c4]:
+            self.client.post(BASE_URL, json=c.serialize())
+
+        response = self.client.get(
+            BASE_URL, query_string={"first_name": "ali", "last_name": "john"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.get_json()
+
+        # Expecting c1 and c2 only
+        self.assertEqual(len(results), 2)
+        for result in results:
+            self.assertIn("ali", result["first_name"].lower())
+            self.assertIn("john", result["last_name"].lower())
+
+    def test_list_customers_invalid_filter_param(self):
+        """It should return 400 when an invalid query parameter is provided"""
+        response = self.client.get(BASE_URL, query_string={"invalid_param": "whatever"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.get_json()
+        self.assertIn("Invalid", data["message"])
 
     # ----------------------------------------------------------
     # TEST DELETE
