@@ -23,7 +23,7 @@ and Delete Customer
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Customer
+from service.models import Customer, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 
@@ -130,40 +130,86 @@ def update_customers(customer_id):
     return jsonify(customer.serialize()), status.HTTP_200_OK
 
 
+######################################################################
+# STATEFUL ACTION ENDPOINT
+######################################################################
+@app.route("/customers/<int:customer_id>/action", methods=["PUT"])
+def customer_action(customer_id):
+    """
+    Perform a stateful action on a Customer (e.g., activate, suspend)
+
+    This endpoint supports actions that change the customer's status.
+    """
+    app.logger.info("Request to perform action on Customer with id [%s]", customer_id)
+    check_content_type("application/json")
+
+    customer = Customer.find(customer_id)
+    if not customer:
+        app.logger.warning("Customer with id [%s] not found.", customer_id)
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    data = request.get_json()
+    action = data.get("action")
+
+    if action not in ["activate", "suspend"]:
+        app.logger.warning("Invalid action attempted: %s", action)
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Invalid action. Must be 'activate' or 'suspend'.",
+        )
+
+    if action == "activate" and customer.status != "active":
+        customer.status = "active"
+        app.logger.info("Customer with id [%s] activated.", customer.id)
+        customer.update()
+    elif action == "suspend" and customer.status != "suspended":
+        customer.status = "suspended"
+        app.logger.info("Customer with id [%s] suspended.", customer.id)
+        customer.update()
+    else:
+        app.logger.info(
+            "No status change needed for Customer with id [%s]", customer.id
+        )
+
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
+    # NOTE: In the future, we may support 'delete' as a soft-delete state change via this endpoint.
+    # For example:
+    #   PUT /customers/<id>/action { "action": "delete" }
+    # This is not implemented yet and is not part of the current requirements.
+
+
 #####################################################################
 # LIST ALL CUSTOMERS
 ######################################################################
 @app.route("/customers", methods=["GET"])
 def list_customers():
-    """Returns all of the Customers"""
+    """
+    Returns all of the Customers, or filters by query parameters if provided.
+
+    Supports multiple query parameters with case-insensitive and partial matching.
+    Example: /customers?first_name=Al will return all customers whose first name includes "Al".
+
+    Returns:
+        A JSON list of customer dictionaries and HTTP 200 status
+    """
     app.logger.info("Request for customer list")
 
+    query_params = request.args.to_dict()
     customers = []
 
-    # Parse any arguments from the query string
-    first_name = request.args.get("first_name")
-    last_name = request.args.get("last_name")
-    email = request.args.get("email")
-    password = request.args.get("password")
-    address = request.args.get("address")
-
-    if first_name:
-        app.logger.info("Find by first name: %s", first_name)
-        customers = Customer.find_by_first_name(first_name)
-    elif last_name:
-        app.logger.info("Find by last name: %s", last_name)
-        customers = Customer.find_by_last_name(last_name)
-    elif email:
-        app.logger.info("Find by email: %s", email)
-        customers = Customer.find_by_email(email)
-    elif password:
-        app.logger.info("Find by password: %s", password)
-        customers = Customer.find_by_password(password)
-    elif address:
-        app.logger.info("Find by address: %s", address)
-        customers = Customer.find_by_address(address)
+    if query_params:
+        app.logger.info("Filtering with query parameters: %s", query_params)
+        try:
+            customers = Customer.filter_by_query(**query_params)
+        except DataValidationError as e:
+            app.logger.warning("Data validation error: %s", str(e))
+            abort(status.HTTP_400_BAD_REQUEST, str(e))
     else:
-        app.logger.info("Find all")
+        app.logger.info("No query parameters provided. Returning all customers.")
         customers = Customer.all()
 
     results = [customer.serialize() for customer in customers]

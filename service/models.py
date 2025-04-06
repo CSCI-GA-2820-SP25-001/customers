@@ -251,3 +251,26 @@ class Customer(db.Model):
         """Validates email format using regex."""
         email_regex = r"(^[\w\.\+-]+@[\w-]+\.[a-zA-Z]{2,}$)"
         return re.match(email_regex, email) is not None
+
+    @classmethod
+    def filter_by_query(cls, **filters):
+        """Filters customers based on query parameters (partial, case-insensitive)"""
+        allowed_fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "address",
+            "status",
+        ]
+        query = cls.query
+
+        for field, value in filters.items():
+            if field not in allowed_fields:
+                raise DataValidationError(f"Invalid query field: {field}")
+            column = getattr(cls, field)
+            query = query.filter(
+                column.ilike(f"%{value}%")
+            )  # case-insensitive partial match
+
+        return query.all()
