@@ -1,7 +1,7 @@
 # lab-github-actions
 
-[![Build Status](https://github.com/efergee/customers/actions/workflows/workflow.yml/badge.svg)](https://github.com/efergee/customers/actions)
-[![codecov](https://codecov.io/gh/efergee/customers/graph/badge.svg?token=NQMF0BD24D)](https://codecov.io/gh/efergee/customers)
+[![Build Status](https://github.com/CSCI-GA-2820-SP25-001/customers/actions/workflows/workflow.yml/badge.svg)](https://github.com/CSCI-GA-2820-SP25-001/customers/actions)
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers/graph/badge.svg?token=NQMF0BD24D)](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers)
 
 # Customers Service
 
