@@ -1,8 +1,3 @@
-# lab-github-actions
-
-[![Build Status](https://github.com/efergee/customers/actions/workflows/workflow.yml/badge.svg)](https://github.com/efergee/customers/actions)
-[![codecov](https://codecov.io/gh/efergee/customers/graph/badge.svg?token=NQMF0BD24D)](https://codecov.io/gh/efergee/customers)
-
 # Customers Service
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
