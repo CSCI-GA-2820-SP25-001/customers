@@ -5,6 +5,11 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
+### Codecov (badge)
+This project uses [Codecov](https://about.codecov.io/) to track unit test coverage as part of our Continuous Integration (CI) pipeline. Every Pull Request is automatically tested, and coverage reports are uploaded to Codecov to ensure code quality and maintain 95%+ test coverage.
+
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers/graph/badge.svg?token=ZADCYPUSA4)](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers)
+
 ## Overview
 The **Customers Service** is a microservice that represents customer accounts for an eCommerce platform. This service provides CRUD operations to manage customer information, including first name, last name, email, password, and address.
 
@@ -16,11 +21,6 @@ Ensure you have the following installed on your system:
 - pip (Python package manager)
 - Flask
 - PostgreSQL (if using a database)
-
-### Codecov (badge)
-This project uses [Codecov](https://about.codecov.io/) to track unit test coverage as part of our Continuous Integration (CI) pipeline. Every Pull Request is automatically tested, and coverage reports are uploaded to Codecov to ensure code quality and maintain 95%+ test coverage.
-
-[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers/graph/badge.svg?token=ZADCYPUSA4)](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers)
 
 
 ### Installation
