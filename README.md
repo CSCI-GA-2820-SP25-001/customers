@@ -17,6 +17,12 @@ Ensure you have the following installed on your system:
 - Flask
 - PostgreSQL (if using a database)
 
+### Codecov (badge)
+This project uses [Codecov](https://about.codecov.io/) to track unit test coverage as part of our Continuous Integration (CI) pipeline. Every Pull Request is automatically tested, and coverage reports are uploaded to Codecov to ensure code quality and maintain 95%+ test coverage.
+
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers/graph/badge.svg?token=ZADCYPUSA4)](https://codecov.io/gh/CSCI-GA-2820-SP25-001/customers)
+
+
 ### Installation
 1. Clone the repository:
    ```sh
