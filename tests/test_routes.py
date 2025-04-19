@@ -512,3 +512,13 @@ class TestCustomerService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         data = response.get_json()
         self.assertIn("was not found", data["message"])
+
+    ######################################################################
+    # HEALTH CHECK ENDPOINT FOR KUBERNETES (for CI)
+    ######################################################################
+
+    def test_health_check(self):
+        """It should return 200 OK with {status: OK}"""
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.get_json()["status"], "OK")

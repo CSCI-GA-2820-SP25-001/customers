@@ -270,3 +270,15 @@ def delete_customers(customers_id):
 
     app.logger.info("Customers with ID: %d delete complete.", customers_id)
     return {}, status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# HEALTH CHECK FOR KUBERNETES
+######################################################################
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Health check for Kubernetes liveness/readiness probes"""
+    app.logger.debug("Health check requested.")
+    return jsonify(status="OK"), status.HTTP_200_OK
