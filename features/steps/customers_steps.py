@@ -56,6 +56,10 @@ def step_impl(context):
             "last_name": row["last_name"],
             "address": row["address"],
             "email": row["email"],
+            "password": row.get("password", "defaultpass123"),
+            "status": row.get(
+                "status", "active"
+            ),  # or whatever your default enum value is
         }
         context.resp = requests.post(rest_endpoint, json=payload, timeout=WAIT_TIMEOUT)
         expect(context.resp.status_code).equal_to(HTTP_201_CREATED)

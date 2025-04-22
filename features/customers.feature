@@ -5,16 +5,11 @@ Feature: The customer service back-end
 
 Background:
     Given the following customers
-        # | name       | category | available | gender  | birthday   |
-        # | fido       | dog      | True      | MALE    | 2019-11-18 |
-        # | kitty      | cat      | True      | FEMALE  | 2020-08-13 |
-        # | leo        | lion     | False     | MALE    | 2021-04-01 |
-        # | sammy      | snake    | True      | UNKNOWN | 2018-06-04 |
-        | first_name | last_name| address       | email        |
-        | fido       | dog      | California    | MALE@aol.com | 
-        | kitty      | cat      | Pakistan      | FE@MALE.com  | 
-        | leo        | lion     | New York      | MAL@E.com    | 
-        | sammy      | snake    | Antarctica    | UNKNO@WN.com | 
+        | first_name | last_name | address    | email        | password   | status |
+        | fido       | dog       | California | MALE@aol.com | secret123  | active |
+        | kitty      | cat       | Pakistan   | FE@MALE.com  | meow456    | deleted |
+        | leo        | lion      | New York   | MAL@E.com    | roar789    | suspended |
+        | sammy      | snake     | Antarctica | UNKNO@WN.com | hiss000    | active |
 
 Scenario: The server is running
     When I visit the "Home Page"
@@ -47,7 +42,7 @@ Scenario: List all customers
     Then I should see the message "Success"
     And I should see "fido" in the results
     And I should see "kitty" in the results
-    And I should not see "leo" in the results
+    And I should see "leo" in the results
 
 Scenario: Search for first name
     When I visit the "Home Page"

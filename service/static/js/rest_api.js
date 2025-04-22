@@ -11,6 +11,8 @@ $(function () {
         $("#customer_last_name").val(res.last_name);
         $("#customer_address").val(res.address);
         $("#customer_email").val(res.email);
+        $("#customer_password").val(res.password);
+        $("#customer_status").val(res.status);
     }
 
     /// Clears all form fields
@@ -19,6 +21,8 @@ $(function () {
         $("#customer_last_name").val("");
         $("#customer_address").val("");
         $("#customer_email").val("");
+        $("#customer_password").val("");
+        $("#customer_status").val("active");  // for default
     }
 
     // Updates the flash message area
@@ -37,12 +41,16 @@ $(function () {
         let last_name = $("#customer_last_name").val();
         let email = $("#customer_email").val();
         let address = $("#customer_address").val();
+        let password = $("#customer_password").val();
+        let status = $("#customer_status").val();
 
         let data = {
             "first_name": first_name,
-            "last_name": last_name, 
-            "email": email, 
-            "address": address
+            "last_name": last_name,
+            "email": email,
+            "address": address,
+            "password": password,
+            "status": status
         };
 
         $("#flash_message").empty();
@@ -76,12 +84,16 @@ $(function () {
         let last_name = $("#customer_last_name").val();
         let email = $("#customer_email").val();
         let address = $("#customer_address").val();
-
+        let password = $("#customer_password").val();
+        let status = $("#customer_status").val();
+        
         let data = {
             "first_name": first_name,
-            "last_name": last_name, 
-            "email": email, 
-            "address": address
+            "last_name": last_name,
+            "email": email,
+            "address": address,
+            "password": password,
+            "status": status
         };
 
         $("#flash_message").empty();
@@ -203,16 +215,20 @@ $(function () {
             $("#search_results").empty();
             let table = '<table class="table table-striped" cellpadding="10">'
             table += '<thead><tr>'
-            table += '<th class="col-md-2">ID</th>'
-            table += '<th class="col-md-2">First_Name</th>'
-            table += '<th class="col-md-2">Last_Name</th>'
-            table += '<th class="col-md-2">Address</th>'
+            table += '<th class="col-md-1">ID</th>'
+            table += '<th class="col-md-1">First Name</th>'
+            table += '<th class="col-md-1">Last Name</th>'
             table += '<th class="col-md-2">Email</th>'
+            table += '<th class="col-md-2">Address</th>'
+            table += '<th class="col-md-1">Password</th>'
+            table += '<th class="col-md-1">Status</th>'
+            table += '<th class="col-md-1">Created</th>'
+            table += '<th class="col-md-1">Updated</th>'
             table += '</tr></thead><tbody>'
             let firstCustomer = "";
             for(let i = 0; i < res.length; i++) {
                 let customer = res[i];
-                table +=  `<tr id="row_${i}"><td>${customer.id}</td><td>${customer.first_name}</td><td>${customer.last_name}</td><td>${customer.address}</td><td>${customer.email}</td></tr>`;
+                table +=  `<tr id="row_${i}"><td>${customer.id}</td><td>${customer.first_name}</td><td>${customer.last_name}</td><td>${customer.email}</td><td>${customer.address}</td><td>${customer.password}</td><td>${customer.status}</td><td>${customer.creation_date || 'N/A'}</td><td>${customer.last_updated || 'N/A'}</td></tr>`;
                 if (i == 0) {
                     firstCustomer = customer;
                 }

@@ -159,6 +159,12 @@ class Customer(db.Model):
             "address": self.address,
             "password": self.password,
             "status": self.status.value,
+            "creation_date": (
+                self.creation_date.isoformat() if self.creation_date else None
+            ),
+            "last_updated": (
+                self.last_updated.isoformat() if self.last_updated else None
+            ),
         }
 
     @classmethod
