@@ -23,26 +23,23 @@ Scenario: The server is running
 
 Scenario: Create a Customer
     When I visit the "Home Page"
-    And I set the "Name" to "Happy"
-    And I set the "Category" to "Hippo"
-    And I select "False" in the "Available" dropdown
-    And I select "Male" in the "Gender" dropdown
-    And I set the "Birthday" to "06-16-2022"
+    And I set the "First Name" to "Happy"
+    And I set the "Last Name" to "Hippo"
+    And I set the "address" to "Empire State Building"
+    And I set the "email" to "test@devopsrules.com"
     And I press the "Create" button
     Then I should see the message "Success"
     When I copy the "Id" field
     And I press the "Clear" button
     Then the "Id" field should be empty
-    And the "Name" field should be empty
-    And the "Category" field should be empty
+    And the "First Name" field should be empty
     When I paste the "Id" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "Happy" in the "Name" field
-    And I should see "Hippo" in the "Category" field
-    And I should see "False" in the "Available" dropdown
-    And I should see "Male" in the "Gender" dropdown
-    And I should see "2022-06-16" in the "Birthday" field
+    And I should see "Happy" in the "First Name" field
+    And I should see "Hippo" in the "Last Name" field
+    And I should see "Empire State Building" in the "address" field
+    And I should see "test@devopsrules.com" in the "email" field
 
 Scenario: List all customers
     When I visit the "Home Page"
@@ -52,33 +49,42 @@ Scenario: List all customers
     And I should see "kitty" in the results
     And I should not see "leo" in the results
 
-Scenario: Search for dogs
+Scenario: Search for first name
     When I visit the "Home Page"
-    And I set the "Category" to "dog"
+    And I set the "First Name" to "fido"
     And I press the "Search" button
     Then I should see the message "Success"
     And I should see "fido" in the results
     And I should not see "kitty" in the results
     And I should not see "leo" in the results
 
-Scenario: Search for available
-    When I visit the "Home Page"
-    And I select "True" in the "Available" dropdown
-    And I press the "Search" button
-    Then I should see the message "Success"
-    And I should see "fido" in the results
-    And I should see "kitty" in the results
-    And I should see "sammy" in the results
-    And I should not see "leo" in the results
+# Scenario: Search for dogs
+#     When I visit the "Home Page"
+#     And I set the "Category" to "dog"
+#     And I press the "Search" button
+#     Then I should see the message "Success"
+#     And I should see "fido" in the results
+#     And I should not see "kitty" in the results
+#     And I should not see "leo" in the results
+
+# Scenario: Search for available
+#     When I visit the "Home Page"
+#     And I select "True" in the "Available" dropdown
+#     And I press the "Search" button
+#     Then I should see the message "Success"
+#     And I should see "fido" in the results
+#     And I should see "kitty" in the results
+#     And I should see "sammy" in the results
+#     And I should not see "leo" in the results
 
 Scenario: Update a Customer
     When I visit the "Home Page"
-    And I set the "Name" to "fido"
+    And I set the "First Name" to "fido"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I should see "fido" in the "Name" field
-    And I should see "dog" in the "Category" field
-    When I change "Name" to "Loki"
+    And I should see "fido" in the "First Name" field
+    And I should see "dog" in the "Last Name" field
+    When I change "First Name" to "Loki"
     And I press the "Update" button
     Then I should see the message "Success"
     When I copy the "Id" field
@@ -86,7 +92,7 @@ Scenario: Update a Customer
     And I paste the "Id" field
     And I press the "Retrieve" button
     Then I should see the message "Success"
-    And I should see "Loki" in the "Name" field
+    And I should see "Loki" in the "First Name" field
     When I press the "Clear" button
     And I press the "Search" button
     Then I should see the message "Success"
@@ -94,15 +100,15 @@ Scenario: Update a Customer
     And I should not see "fido" in the results
 
 
-Scenario: Delete a Pet
+Scenario: Delete a Customer
     When I visit the "Home Page"
-    And I set the "Name" to "fido"
+    And I set the "First Name" to "fido"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I should see "fido" in the "Name" field
-    And I should see "dog" in the "Category" field
+    And I should see "fido" in the "First Name" field
+    And I should see "dog" in the "Last Name" field
     When I press the "Delete" button
-    Then I should see the message "Pet has been Deleted!"
+    Then I should see the message "Customer has been Deleted!"
     When I press the "Search" button
     When I press the "Clear" button
     And I press the "Search" button
