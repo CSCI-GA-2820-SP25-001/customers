@@ -98,10 +98,10 @@ class TestCustomerService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        data = resp.get_json()
-        self.assertIsNotNone(data)
-        self.assertIn("message", data)
-        self.assertEqual(data["message"], "Welcome to the Customer API")
+        # Check that the response is HTML
+        self.assertIn("text/html", resp.content_type)
+        # Check that the HTML contains the expected content
+        self.assertIn(b"Customer Demo REST API Service", resp.data)
 
     def test_method_not_allowed(self):
         """It should return 405 Method Not Allowed"""
