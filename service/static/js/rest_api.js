@@ -212,7 +212,7 @@ $(function () {
             let firstCustomer = "";
             for(let i = 0; i < res.length; i++) {
                 let customer = res[i];
-                table +=  `<tr id="row_${i}"><td>${customer.id}</td><td>${customer.name}</td><td>${customer.category}</td><td>${customer.available}</td><td>${customer.gender}</td><td>${customer.birthday}</td></tr>`;
+                table +=  `<tr id="row_${i}"><td>${customer.id}</td><td>${customer.first_name}</td><td>${customer.last_name}</td><td>${customer.address}</td><td>${customer.email}</td></tr>`;
                 if (i == 0) {
                     firstCustomer = customer;
                 }
