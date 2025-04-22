@@ -32,8 +32,8 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
-    return jsonify(message="Welcome to the Customer API"), 200
+    """Base URL for our service"""
+    return app.send_static_file("index.html")
 
 
 ######################################################################
