@@ -44,14 +44,58 @@ Scenario: List all customers
     And I should see "kitty" in the results
     And I should see "leo" in the results
 
-Scenario: Search for first name
+Scenario: List all customers with dedicated List button
+    When I visit the "Home Page"
+    And I press the "List" button
+    Then I should see the message "Success"
+    And I should see "fido" in the results
+    And I should see "kitty" in the results
+    And I should see "leo" in the results
+    And I should see "sammy" in the results
+
+Scenario: Search for first name using form
     When I visit the "Home Page"
     And I set the "First Name" to "fido"
-    And I press the "Search" button
+    And I press the "Search by Form" button
     Then I should see the message "Success"
     And I should see "fido" in the results
     And I should not see "kitty" in the results
     And I should not see "leo" in the results
+
+Scenario: Search for email using form
+    When I visit the "Home Page"
+    And I set the "Email" to "MALE@aol"
+    And I press the "Search by Form" button
+    Then I should see the message "Success"
+    And I should see "fido" in the results
+    And I should not see "kitty" in the results
+    And I should not see "leo" in the results
+
+Scenario: Search using custom query for status
+    When I visit the "Home Page"
+    And I set the "Search Query" to "status=active"
+    And I press the "Search by Query" button
+    Then I should see the message "Success"
+    And I should see "fido" in the results
+    And I should see "sammy" in the results
+    And I should not see "leo" in the results
+    And I should not see "kitty" in the results
+
+Scenario: Search using custom query with multiple fields
+    When I visit the "Home Page"
+    And I set the "Search Query" to "address=New York, status=suspended"
+    And I press the "Search by Query" button
+    Then I should see the message "Success"
+    And I should see "leo" in the results
+    And I should not see "fido" in the results
+    And I should not see "kitty" in the results
+    And I should not see "sammy" in the results
+
+Scenario: Search with invalid query syntax
+    When I visit the "Home Page"
+    And I set the "Search Query" to "invalid_field=value"
+    And I press the "Search by Query" button
+    Then I should see the message "Error in search query: Invalid field: "invalid_field". Valid fields are: first_name, last_name, email, password, address, status"
 
 # Scenario: Search for dogs
 #     When I visit the "Home Page"
