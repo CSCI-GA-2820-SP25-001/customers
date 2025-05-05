@@ -274,9 +274,18 @@ class Customer(db.Model):
         for field, value in filters.items():
             if field not in allowed_fields:
                 raise DataValidationError(f"Invalid query field: {field}")
-            column = getattr(cls, field)
-            query = query.filter(
-                column.ilike(f"%{value}%")
-            )  # case-insensitive partial match
+
+            # Special handling for status field which is an enum
+            if field == "status":
+                try:
+                    # Convert to enum value for exact matching
+                    status_enum = cls.StatusEnum(value)
+                    query = query.filter(getattr(cls, field) == status_enum)
+                except ValueError as exc:
+                    raise DataValidationError(f"Invalid status value: {value}") from exc
+            else:
+                # For other fields, use case-insensitive partial match
+                column = getattr(cls, field)
+                query = query.filter(column.ilike(f"%{value}%"))
 
         return query.all()
