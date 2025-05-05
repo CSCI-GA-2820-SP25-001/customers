@@ -420,3 +420,31 @@ class TestCustomer(TestCase):
 
         results = Customer.find_by_name("Alice").all()
         self.assertTrue(any(c.first_name == "Alice" for c in results))
+
+    def test_str_repr_logs(self):
+        """It should execute lines 280–285 of models.py related to logging"""
+        customer = CustomerFactory()
+        customer.create()
+        result = repr(customer)
+        self.assertIsInstance(result, str)
+        self.assertIn(customer.first_name, result)
+        self.assertIn(customer.last_name, result)
+
+    def test_filter_by_valid_status_query(self):
+        """It should return customers filtered by valid status"""
+        active_customer = CustomerFactory(status="active")
+        active_customer.create()
+        suspended_customer = CustomerFactory(status="suspended")
+        suspended_customer.create()
+
+        results = Customer.filter_by_query(status="active")
+        self.assertTrue(all(c.status.name.lower() == "active" for c in results))
+        self.assertTrue(any(c.id == active_customer.id for c in results))
+        self.assertFalse(any(c.id == suspended_customer.id for c in results))
+
+    def test_filter_by_invalid_status_query(self):
+        """It should raise DataValidationError on invalid status query"""
+        CustomerFactory(status="active").create()
+        with self.assertRaises(DataValidationError) as context:
+            Customer.filter_by_query(status="invalid_status")
+        self.assertIn("Invalid status value", str(context.exception))
