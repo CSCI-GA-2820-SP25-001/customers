@@ -56,7 +56,7 @@ Scenario: List all customers with dedicated List button
 Scenario: Search for first name using form
     When I visit the "Home Page"
     And I set the "First Name" to "fido"
-    And I press the "Search by Form" button
+    And I press the "Search" button
     Then I should see the message "Success"
     And I should see "fido" in the results
     And I should not see "kitty" in the results
@@ -65,7 +65,7 @@ Scenario: Search for first name using form
 Scenario: Search for email using form
     When I visit the "Home Page"
     And I set the "Email" to "MALE@aol"
-    And I press the "Search by Form" button
+    And I press the "Search" button
     Then I should see the message "Success"
     And I should see "fido" in the results
     And I should not see "kitty" in the results

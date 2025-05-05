@@ -237,6 +237,8 @@ $(function () {
 
     // Function to display search results
     function display_search_results(res) {
+        console.log("Rendering results:", res);
+        
         $("#search_results").empty();
         let table = '<table class="table table-striped" cellpadding="10">'
         table += '<thead><tr>'
@@ -302,13 +304,21 @@ $(function () {
         })
 
         ajax.done(function(res){
+            console.log("Received response:", res);
             display_search_results(res);
         });
 
         ajax.fail(function(res){
             let errorMessage = "An error occurred during search.";
+            console.log("AJAX Error:", res);
             if (res.responseJSON && res.responseJSON.message) {
                 errorMessage = res.responseJSON.message;
+                console.log("Error message from server:", errorMessage);
+            } else {
+                console.log("No specific error message from server");
+                console.log("Status:", res.status);
+                console.log("Status Text:", res.statusText);
+                console.log("Response Text:", res.responseText);
             }
             flash_message(errorMessage);
         });
@@ -318,10 +328,12 @@ $(function () {
     // Search for a Customer using custom query
     // ****************************************
 
-    $("#query-search-btn").click(function () {
+    $("#search_by_query-btn").click(function () {
         let searchQuery = $("#customer_search_query").val();
         let queryParams = [];
         
+        let queryString;
+
         // Check if search query is empty
         if (!searchQuery) {
             flash_message("Please enter a search query. Format: field=value (e.g., email=test, status=active)");
@@ -330,9 +342,10 @@ $(function () {
 
         // Parse the search query
         try {
-            // Split by commas, but not within quotes
             let queryParts = searchQuery.split(',').map(part => part.trim());
-            
+            console.log("Search Query:", searchQuery);
+            console.log("Query Parts:", queryParts);
+            console.log("Query Params:", queryParams);
             for (let part of queryParts) {
                 // Check if the part has the format field=value
                 if (!part.includes('=')) {
@@ -358,8 +371,10 @@ $(function () {
             flash_message(`Error in search query: ${error.message}`);
             return;
         }
-
-        let queryString = queryParams.join('&');
+        
+        queryString = queryParams.join('&');
+        console.log("Query String:", queryString);
+        console.log("Executing AJAX GET to: /customers?" + queryString);
         
         $("#flash_message").empty();
 
@@ -371,13 +386,22 @@ $(function () {
         })
 
         ajax.done(function(res){
+            console.log("Search by Query Response:", res);
             display_search_results(res);
         });
 
         ajax.fail(function(res){
+            console.log("Search by Query failed with status:", res.status);
             let errorMessage = "An error occurred during search.";
+            console.log("Search by Query AJAX Error:", res);
             if (res.responseJSON && res.responseJSON.message) {
                 errorMessage = res.responseJSON.message;
+                console.log("Error message from server:", errorMessage);
+            } else {
+                console.log("No specific error message from server");
+                console.log("Status:", res.status);
+                console.log("Status Text:", res.statusText);
+                console.log("Response Text:", res.responseText);
             }
             flash_message(errorMessage);
         });
