@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  database_uri: cG9zdGdyZXNxbCtwc3ljb3BnOi8vcG9zdGdyZXM6cGdzM2NyM3RAcG9zdGdyZXM6NTQzMi9wZXRzdG9yZQ==
+  password: cGdzM2NyM3Q=
+kind: Secret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"database_uri":"cG9zdGdyZXNxbCtwc3ljb3BnOi8vcG9zdGdyZXM6cGdzM2NyM3RAcG9zdGdyZXM6NTQzMi9wZXRz\ndG9yZQ==\n","password":"cGdzM2NyM3Q="},"kind":"Secret","metadata":{"annotations":{},"name":"postgres-creds","namespace":"omarahmad4-dev"}}
+  creationTimestamp: "2025-04-15T23:36:59Z"
+  name: postgres-creds
+  namespace: omarahmad4-dev
+  resourceVersion: "1570614902"
+  uid: a2cfc334-859a-4410-b59c-56e287bc21af
+type: Opaque
